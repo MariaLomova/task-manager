@@ -1,0 +1,8 @@
+com/example/taskmanager/TaskManagerApplication.class
+com/example/taskmanager/web/dto/TaskUpdateRequest.class
+com/example/taskmanager/web/dto/TaskCreateRequest.class
+com/example/taskmanager/model/Status.class
+com/example/taskmanager/web/TaskController.class
+com/example/taskmanager/web/dto/TaskResponse.class
+com/example/taskmanager/model/Task.class
+com/example/taskmanager/repo/TaskRepository.class

@@ -1,0 +1,8 @@
+/workspaces/task-manager/src/main/java/com/example/taskmanager/web/dto/TaskResponse.java
+/workspaces/task-manager/src/main/java/com/example/taskmanager/repo/TaskRepository.java
+/workspaces/task-manager/src/main/java/com/example/taskmanager/web/dto/TaskUpdateRequest.java
+/workspaces/task-manager/src/main/java/com/example/taskmanager/TaskManagerApplication.java
+/workspaces/task-manager/src/main/java/com/example/taskmanager/web/TaskController.java
+/workspaces/task-manager/src/main/java/com/example/taskmanager/model/Task.java
+/workspaces/task-manager/src/main/java/com/example/taskmanager/model/Status.java
+/workspaces/task-manager/src/main/java/com/example/taskmanager/web/dto/TaskCreateRequest.java
