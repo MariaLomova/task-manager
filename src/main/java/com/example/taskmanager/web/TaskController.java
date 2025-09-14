@@ -7,11 +7,16 @@ import com.example.taskmanager.web.dto.TaskCreateRequest;
 import com.example.taskmanager.web.dto.TaskResponse;
 import com.example.taskmanager.web.dto.TaskUpdateRequest;
 import jakarta.validation.Valid;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -24,25 +29,41 @@ public class TaskController {
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public TaskResponse create(@Valid @RequestBody TaskCreateRequest req) {
+    @Transactional
+    public ResponseEntity<TaskResponse> create(@Valid @RequestBody TaskCreateRequest req) {
         Task task = new Task(
                 req.getTitle(),
                 req.getDescription(),
                 req.getStatus() == null ? Status.NEW : req.getStatus()
         );
         Task saved = repo.save(task);
-        return toResp(saved);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.LOCATION, "/api/tasks/" + saved.getId());
+        return new ResponseEntity<>(toResp(saved), headers, HttpStatus.CREATED);
     }
 
     @GetMapping
-    public List<TaskResponse> list(@RequestParam(name = "status", required = false) Status status) {
-        List<Task> tasks = (status == null) ? repo.findAll() : repo.findByStatus(status);
-        return tasks.stream().map(this::toResp).toList();
+    public Page<TaskResponse> list(
+            @RequestParam(name = "status", required = false) Status status,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "sort", defaultValue = "createdAt,desc") String sort
+    ) {
+        String[] parts = sort.split(",");
+        Sort s = (parts.length == 2)
+                ? Sort.by(Sort.Direction.fromString(parts[1]), parts[0])
+                : Sort.by(Sort.Direction.DESC, "createdAt");
+
+        PageRequest pr = PageRequest.of(page, size, s);
+        Page<Task> result = (status == null)
+                ? repo.findAll(pr)
+                : repo.findAllByStatus(status, pr);
+
+        return result.map(this::toResp);
     }
 
     @GetMapping("/{id}")
-    public TaskResponse get(@PathVariable Long id) {
+    public TaskResponse get(@PathVariable(name = "id") Long id) {
         Task t = repo.findById(id).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found")
         );
@@ -50,7 +71,9 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public TaskResponse update(@PathVariable Long id, @RequestBody TaskUpdateRequest req) {
+    @Transactional
+    public TaskResponse update(@PathVariable(name = "id") Long id,
+                               @RequestBody TaskUpdateRequest req) {
         Task t = repo.findById(id).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found")
         );
@@ -63,14 +86,22 @@ public class TaskController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        if (!repo.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found");
+    @Transactional
+    public void delete(@PathVariable(name = "id") Long id) {
+        try {
+            repo.deleteById(id);
+        } catch (EmptyResultDataAccessException ignored) {
+            // если задачи нет, то просто ничего не делаем
         }
-        repo.deleteById(id);
     }
 
     private TaskResponse toResp(Task t) {
-        return new TaskResponse(t.getId(), t.getTitle(), t.getDescription(), t.getStatus(), t.getCreatedAt());
+        return new TaskResponse(
+                t.getId(),
+                t.getTitle(),
+                t.getDescription(),
+                t.getStatus(),
+                t.getCreatedAt()
+        );
     }
 }

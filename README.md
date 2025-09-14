@@ -1,13 +1,8 @@
-# Task Manager (Spring Boot + REST + JPA + H2)
+# Task Manager
 
-Учебный проект для портфолио Java Junior: CRUD по задачам, фильтр по статусу, автотесты.
+Короткий REST API для задач. Стек: Spring Boot 3, Java 17, Spring Data JPA (Hibernate), PostgreSQL (Docker), Maven, JUnit 5.
 
-## Технологии
-- Java 17, Spring Boot 3 (Web, Data JPA, Validation)
-- H2 (in-memory)
-- JUnit 5, Spring Test (MockMvc)
-- Maven
-
-## Запуск (локально/Codespaces)
+## Запуск
 ```bash
-mvn spring-boot:run
+mvn clean package -DskipTests
+docker compose up -d
